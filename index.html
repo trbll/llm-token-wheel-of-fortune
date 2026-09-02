@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GAIT Token Wheel of Fortune</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171714;
+      --muted: #66665f;
+      --paper: #f4f1e8;
+      --card: #fffdf8;
+      --line: #d8d3c5;
+      --accent: #f2b705;
+      --accent-dark: #6f5200;
+      --success: #136f54;
+      --danger: #a13a2b;
+      --shadow: 0 20px 55px rgb(45 39 24 / 12%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 8% 4%, rgb(242 183 5 / 18%), transparent 28rem),
+        linear-gradient(145deg, #f8f5ed 0%, var(--paper) 58%, #ece8dc 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, textarea, input { font: inherit; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 46px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent-dark);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 1000px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.4rem, 7vw, 5.3rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.9;
+    }
+
+    h1 .title-group {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .lede {
+      max-width: 620px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1.03rem;
+      line-height: 1.55;
+    }
+
+    .model-pill {
+      flex: 0 0 auto;
+      margin-bottom: 6px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgb(255 253 248 / 78%);
+      color: var(--muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .model-pill::before {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: #97978f;
+      content: "";
+      transition: background 180ms ease, box-shadow 180ms ease;
+    }
+
+    .model-pill.connected::before {
+      background: #22a06b;
+      box-shadow: 0 0 0 4px rgb(34 160 107 / 15%), 0 0 14px rgb(34 160 107 / 80%);
+      animation: connectedGlow 2.2s ease-in-out infinite;
+    }
+
+    .model-pill.missing::before {
+      background: #c58b00;
+      box-shadow: 0 0 0 4px rgb(197 139 0 / 12%);
+    }
+
+    .model-pill.disconnected::before {
+      background: #a13a2b;
+    }
+
+    @keyframes connectedGlow {
+      0%, 100% { box-shadow: 0 0 0 4px rgb(34 160 107 / 12%), 0 0 10px rgb(34 160 107 / 55%); }
+      50% { box-shadow: 0 0 0 5px rgb(34 160 107 / 18%), 0 0 18px rgb(34 160 107 / 90%); }
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.88fr) minmax(480px, 1.32fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .card {
+      border: 1px solid rgb(216 211 197 / 90%);
+      border-radius: 24px;
+      background: rgb(255 253 248 / 92%);
+      box-shadow: var(--shadow);
+    }
+
+    .control-card {
+      display: flex;
+      flex-direction: column;
+      padding: 25px;
+    }
+
+    .section-label {
+      display: block;
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 116px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      padding: 17px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.38rem;
+      line-height: 1.45;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    textarea:focus, input:focus {
+      border-color: #a87e00;
+      box-shadow: 0 0 0 4px rgb(242 183 5 / 17%);
+    }
+
+    textarea[readonly] {
+      resize: none;
+      background: #fbfaf6;
+      color: var(--muted);
+      cursor: default;
+    }
+
+    .token-history-section {
+      margin-top: 16px;
+    }
+
+    .token-history-section[hidden] { display: none; }
+
+    .token-history {
+      padding: 12px 14px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgb(255 255 255 / 68%);
+    }
+
+    .token-history-text {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.38rem;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .history-token {
+      padding: 1px 2px;
+      border-radius: 4px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+
+    .history-token.whitespace-only {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.78em;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .candidate-control label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 0 12px;
+    }
+
+    button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform 120ms ease, opacity 120ms ease, background 120ms ease;
+    }
+
+    button:hover:not(:disabled) { transform: translateY(-1px); }
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { cursor: not-allowed; opacity: 0.44; }
+
+    .primary {
+      align-self: end;
+      background: var(--ink);
+      color: #fff;
+      padding: 0 18px;
+    }
+
+    .primary.awaiting-first-use {
+      animation: firstUseBreath 2.8s ease-in-out infinite;
+    }
+
+    @keyframes firstUseBreath {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgb(242 183 5 / 0%);
+      }
+      50% {
+        transform: scale(1.012);
+        box-shadow: 0 0 0 7px rgb(242 183 5 / 17%), 0 9px 22px rgb(45 39 24 / 13%);
+      }
+    }
+
+    .secondary {
+      width: 100%;
+      margin-top: 9px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .truth-note {
+      margin-top: 20px;
+      padding: 15px 16px;
+      border: 1px solid #e5dcc4;
+      border-radius: 12px;
+      background: #fffbef;
+      color: #514b3a;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .truth-note strong { color: #292310; }
+
+    .status {
+      min-height: 48px;
+      margin: auto 0 0;
+      padding-top: 22px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--success); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 20;
+      width: min(520px, calc(100% - 28px));
+      padding: 13px 16px;
+      transform: translate(-50%, 18px);
+      border: 1px solid #3c3522;
+      border-radius: 12px;
+      background: #171714;
+      color: #fff;
+      box-shadow: 0 14px 36px rgb(0 0 0 / 24%);
+      font-size: 0.86rem;
+      line-height: 1.4;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 170ms ease, transform 170ms ease;
+    }
+
+    .toast.show {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    .wheel-card {
+      display: grid;
+      grid-template-columns: minmax(360px, 1fr) minmax(180px, 0.54fr);
+      gap: 8px;
+      align-items: center;
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .wheel-stage {
+      position: relative;
+      width: min(100%, 560px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 16px 20px rgb(45 39 24 / 15%));
+      overflow: visible;
+    }
+
+    #wheelGroup {
+      transform-origin: 260px 260px;
+      transition: transform 2.9s cubic-bezier(.12,.72,.12,1);
+    }
+
+    .pointer {
+      position: absolute;
+      top: 1.5%;
+      left: 50%;
+      z-index: 3;
+      width: 0;
+      height: 0;
+      transform: translateX(-50%);
+      border-right: 18px solid transparent;
+      border-left: 18px solid transparent;
+      border-top: 42px solid var(--ink);
+      filter: drop-shadow(0 4px 3px rgb(0 0 0 / 18%));
+    }
+
+    .spin-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 4;
+      width: 102px;
+      height: 102px;
+      min-height: 0;
+      transform: translate(-50%, -50%);
+      border: 8px solid #fffdf8;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      box-shadow: 0 8px 22px rgb(0 0 0 / 25%);
+      letter-spacing: 0.08em;
+    }
+
+    .spin-button:not(:disabled) {
+      animation: spinReadyBreath 2.8s ease-in-out infinite;
+    }
+
+    @keyframes spinReadyBreath {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 8px 22px rgb(0 0 0 / 25%), 0 0 0 0 rgb(242 183 5 / 0%);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.025);
+        box-shadow: 0 8px 22px rgb(0 0 0 / 25%), 0 0 0 10px rgb(242 183 5 / 17%), 0 0 26px rgb(242 183 5 / 28%);
+      }
+    }
+
+    .spin-button:hover:not(:disabled),
+    .spin-button:active:not(:disabled) {
+      animation: none;
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    .legend {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      padding: 14px 8px 14px 4px;
+    }
+
+    .legend h2 {
+      margin: 0 0 12px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+    }
+
+    .candidate-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .candidate {
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 9px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: rgb(255 255 255 / 60%);
+      transition: border 160ms ease, background 160ms ease;
+    }
+
+    .candidate.selected {
+      border-color: var(--ink);
+      background: #fff;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .token {
+      min-width: 0;
+      overflow: hidden;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.83rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .probability {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.78rem;
+    }
+
+    .legend-note {
+      margin: 14px 2px 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .sound-toggle {
+      align-self: flex-start;
+      min-height: 34px;
+      margin-top: 14px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .sound-toggle::before {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: #97978f;
+      content: "";
+    }
+
+    .sound-toggle[aria-pressed="true"]::before {
+      background: #22a06b;
+      box-shadow: 0 0 8px rgb(34 160 107 / 65%);
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.77rem;
+    }
+
+    footer p { margin: 0; }
+
+    @media (max-width: 900px) {
+      header { align-items: flex-start; flex-direction: column; }
+      main { grid-template-columns: 1fr; }
+      .wheel-card { grid-template-columns: minmax(320px, 1fr) minmax(180px, .55fr); }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 18px, 1180px); padding-top: 22px; }
+      h1 { font-size: clamp(2.6rem, 12.5vw, 3.2rem); }
+      .control-card, .wheel-card { border-radius: 18px; }
+      .wheel-card { grid-template-columns: 1fr; }
+      .legend { padding: 4px 8px 14px; }
+      .candidate-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+      #wheelGroup { transition-duration: 1ms; }
+      .primary.awaiting-first-use { animation: none; }
+      .spin-button:not(:disabled) { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">GAIT @ UIOWA · ECE:5230</p>
+        <h1>Token <span class="title-group">Wheel of Fortune</span></h1>
+        <p class="lede">Watch a small language model build text one probabilistic token at a time.</p>
+      </div>
+      <div class="model-pill" id="modelPill" aria-live="polite">Checking local Ollama…</div>
+    </header>
+
+    <main>
+      <section class="card control-card" aria-labelledby="growingTextLabel">
+        <label class="section-label" id="growingTextLabel" for="textInput">Starting text</label>
+        <textarea id="textInput" spellcheck="false" placeholder="Enter an unfinished sentence stem without a trailing space, e.g., Beyond the last mapped star, the probe discovered">At the edge of the forest, the machine began to</textarea>
+        <div class="token-history-section" id="tokenHistory" hidden>
+          <span class="section-label">Generated text</span>
+          <div class="token-history">
+            <p class="token-history-text" id="tokenHistoryText"></p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="candidate-control">
+            <label for="candidateCount">Candidates</label>
+            <input id="candidateCount" type="number" min="2" max="10" value="8" inputmode="numeric">
+          </div>
+          <button class="primary awaiting-first-use" id="loadButton" type="button">Generate Next Possible Tokens</button>
+        </div>
+        <div class="truth-note" id="truthNote">
+          <strong>Conditional top-8 wheel.</strong> Tokens outside the displayed eight are omitted. The visible percentages are renormalized to total 100%.
+        </div>
+
+        <button class="secondary" id="resetButton" type="button">Try Another Starting Text</button>
+
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card wheel-card" aria-label="Weighted next-token wheel">
+        <div class="wheel-stage">
+          <div class="pointer" aria-hidden="true"></div>
+          <svg viewBox="0 0 520 520" role="img" aria-labelledby="wheelTitle wheelDescription">
+            <title id="wheelTitle">Conditional next-token wheel</title>
+            <desc id="wheelDescription">Wheel wedges are proportional to probabilities renormalized among the displayed candidates.</desc>
+            <circle cx="260" cy="260" r="232" fill="#e7e2d5" stroke="#171714" stroke-width="3"></circle>
+            <g id="wheelGroup"></g>
+            <circle cx="260" cy="260" r="66" fill="#fffdf8" stroke="#171714" stroke-width="3"></circle>
+          </svg>
+          <button class="spin-button" id="spinButton" type="button" disabled aria-label="Spin and append one token">SPIN</button>
+        </div>
+
+        <aside class="legend" aria-label="Potential next-token candidates">
+          <h2>Potential Next Tokens</h2>
+          <ol class="candidate-list" id="candidateList"></ol>
+          <p class="legend-note">␠ marks a space, ↵ a newline, and ⇥ a tab. The unmodified token—not this visible label—is appended.</p>
+          <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">Sound On</button>
+        </aside>
+      </section>
+    </main>
+
+    <footer>
+      <p>Probability is not confidence, truth, or verification.</p>
+      <p>Runs locally through Ollama. No prompts leave this computer.</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const COLORS = ["#f2b705", "#cf5747", "#2b7a78", "#4866a8", "#8b5a9e", "#e68632", "#5d8b52", "#bd6f95", "#4c8b9f", "#8e7b52"];
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const textInput = document.querySelector("#textInput");
+    const candidateCount = document.querySelector("#candidateCount");
+    const loadButton = document.querySelector("#loadButton");
+    const resetButton = document.querySelector("#resetButton");
+    const spinButton = document.querySelector("#spinButton");
+    const wheelGroup = document.querySelector("#wheelGroup");
+    const candidateList = document.querySelector("#candidateList");
+    const truthNote = document.querySelector("#truthNote");
+    const status = document.querySelector("#status");
+    const modelPill = document.querySelector("#modelPill");
+    const toast = document.querySelector("#toast");
+    const soundToggle = document.querySelector("#soundToggle");
+    const tokenHistory = document.querySelector("#tokenHistory");
+    const tokenHistoryText = document.querySelector("#tokenHistoryText");
+
+    let candidates = [];
+    let initialStem = textInput.value;
+    let currentText = textInput.value;
+    let loadedForText = "";
+    let rotation = 0;
+    let busy = false;
+    let configuredModel = "";
+    let toastTimer = null;
+    let audioContext = null;
+    let soundEnabled = true;
+    let runStarted = false;
+    let selectedTokenHistory = [];
+    const activeOscillators = new Set();
+
+    function setStatus(message, kind = "") {
+      status.textContent = message;
+      status.className = `status ${kind}`.trim();
+    }
+
+    function showToast(message) {
+      window.clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("show");
+      toastTimer = window.setTimeout(() => toast.classList.remove("show"), 4200);
+    }
+
+    function colorWithAlpha(hex, alpha) {
+      const value = Number.parseInt(hex.slice(1), 16);
+      const red = (value >> 16) & 255;
+      const green = (value >> 8) & 255;
+      const blue = value & 255;
+      return `rgb(${red} ${green} ${blue} / ${alpha})`;
+    }
+
+    function renderTokenHistory() {
+      tokenHistoryText.replaceChildren();
+      tokenHistory.hidden = !selectedTokenHistory.length;
+      if (!selectedTokenHistory.length) return;
+
+      const original = document.createElement("span");
+      original.textContent = initialStem;
+      tokenHistoryText.append(original);
+
+      selectedTokenHistory.forEach(entry => {
+        const token = document.createElement("span");
+        token.className = "history-token";
+        const whitespaceOnly = entry.raw.length > 0 && entry.raw.trim() === "";
+        if (whitespaceOnly) token.classList.add("whitespace-only");
+        token.textContent = whitespaceOnly ? entry.display : entry.raw;
+        token.title = `Selected token: ${entry.display}`;
+        token.style.backgroundColor = colorWithAlpha(entry.color, 0.18);
+        token.style.boxShadow = `inset 0 0 0 1px ${colorWithAlpha(entry.color, 0.36)}`;
+        tokenHistoryText.append(token);
+      });
+    }
+
+    function getAudioContext() {
+      if (audioContext) return audioContext;
+      const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextConstructor) {
+        soundEnabled = false;
+        soundToggle.textContent = "Sound Unavailable";
+        soundToggle.setAttribute("aria-pressed", "false");
+        soundToggle.disabled = true;
+        return null;
+      }
+      audioContext = new AudioContextConstructor();
+      return audioContext;
+    }
+
+    async function resumeAudio() {
+      if (!soundEnabled) return null;
+      const context = getAudioContext();
+      if (context && context.state === "suspended") await context.resume();
+      return context;
+    }
+
+    function scheduleTone({frequency, startTime, duration, volume, type = "sine"}) {
+      if (!soundEnabled || !audioContext) return;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      activeOscillators.add(oscillator);
+      oscillator.addEventListener("ended", () => {
+        activeOscillators.delete(oscillator);
+        oscillator.disconnect();
+        gain.disconnect();
+      }, {once: true});
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration + 0.01);
+    }
+
+    function stopScheduledSounds() {
+      activeOscillators.forEach(oscillator => {
+        try { oscillator.stop(); } catch {}
+      });
+      activeOscillators.clear();
+    }
+
+    function scheduleWheelTicks(durationMs) {
+      if (!soundEnabled || !audioContext || prefersReducedMotion.matches) return;
+      const startTime = audioContext.currentTime;
+      let elapsed = 0;
+      let interval = 42;
+      let index = 0;
+      while (elapsed < durationMs - 150) {
+        scheduleTone({
+          frequency: Math.max(640, 1050 - index * 15),
+          startTime: startTime + elapsed / 1000,
+          duration: 0.026,
+          volume: 0.028,
+          type: "square",
+        });
+        elapsed += interval;
+        interval = Math.min(interval * 1.09, 210);
+        index += 1;
+      }
+    }
+
+    function playLandingCue() {
+      if (!soundEnabled || !audioContext) return;
+      const now = audioContext.currentTime;
+      scheduleTone({frequency: 523.25, startTime: now, duration: 0.16, volume: 0.05});
+      scheduleTone({frequency: 783.99, startTime: now + 0.07, duration: 0.23, volume: 0.042});
+      scheduleTone({frequency: 1046.5, startTime: now + 0.15, duration: 0.3, volume: 0.03});
+    }
+
+    async function toggleSound() {
+      soundEnabled = !soundEnabled;
+      soundToggle.textContent = soundEnabled ? "Sound On" : "Sound Off";
+      soundToggle.setAttribute("aria-pressed", String(soundEnabled));
+      if (!soundEnabled) {
+        stopScheduledSounds();
+        return;
+      }
+      const context = await resumeAudio();
+      if (context) {
+        scheduleTone({frequency: 659.25, startTime: context.currentTime, duration: 0.12, volume: 0.035});
+      }
+    }
+
+    function pointOnCircle(angleDegrees, radius = 222) {
+      const radians = (angleDegrees - 90) * Math.PI / 180;
+      return [260 + radius * Math.cos(radians), 260 + radius * Math.sin(radians)];
+    }
+
+    function wedgePath(startAngle, endAngle) {
+      const span = endAngle - startAngle;
+      const [startX, startY] = pointOnCircle(startAngle);
+      const [endX, endY] = pointOnCircle(endAngle);
+      const largeArc = span > 180 ? 1 : 0;
+      return `M 260 260 L ${startX} ${startY} A 222 222 0 ${largeArc} 1 ${endX} ${endY} Z`;
+    }
+
+    function svgElement(name, attributes = {}) {
+      const element = document.createElementNS(SVG_NS, name);
+      Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
+      return element;
+    }
+
+    function conciseToken(token) {
+      return token.length > 10 ? `${token.slice(0, 9)}…` : token;
+    }
+
+    function drawWheel() {
+      wheelGroup.replaceChildren();
+      wheelGroup.style.transition = "none";
+      rotation = 0;
+      wheelGroup.style.transform = "rotate(0deg)";
+      void wheelGroup.getBoundingClientRect();
+      wheelGroup.style.transition = prefersReducedMotion.matches
+        ? "transform 1ms linear"
+        : "transform 2.9s cubic-bezier(.12,.72,.12,1)";
+
+      if (!candidates.length) {
+        const empty = svgElement("circle", {cx: 260, cy: 260, r: 222, fill: "#ddd7c9"});
+        wheelGroup.append(empty);
+        return;
+      }
+
+      let startAngle = 0;
+      candidates.forEach((candidate, index) => {
+        const span = candidate.p_displayed * 360;
+        const endAngle = startAngle + span;
+        let shape;
+        if (span >= 359.999) {
+          shape = svgElement("circle", {cx: 260, cy: 260, r: 222});
+        } else if (span > 0.0001) {
+          shape = svgElement("path", {d: wedgePath(startAngle, endAngle)});
+        }
+        if (shape) {
+          shape.setAttribute("fill", COLORS[index % COLORS.length]);
+          shape.setAttribute("stroke", "#fffdf8");
+          shape.setAttribute("stroke-width", "3");
+          shape.dataset.candidateId = String(candidate.id);
+          wheelGroup.append(shape);
+        }
+
+        if (span >= 13) {
+          const middle = startAngle + span / 2;
+          const [labelX, labelY] = pointOnCircle(middle, span < 25 ? 178 : 151);
+          const label = svgElement("text", {
+            x: labelX,
+            y: labelY,
+            "text-anchor": "middle",
+            "dominant-baseline": "middle",
+            fill: "#171714",
+            "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
+            "font-size": span < 25 ? 12 : 15,
+            "font-weight": 800,
+          });
+          label.textContent = conciseToken(candidate.display);
+          const readableRotation = middle > 90 && middle < 270 ? middle + 180 : middle;
+          label.setAttribute("transform", `rotate(${readableRotation} ${labelX} ${labelY})`);
+          wheelGroup.append(label);
+        }
+        startAngle = endAngle;
+      });
+    }
+
+    function renderCandidates(selectedId = null) {
+      candidateList.replaceChildren();
+      candidates.forEach((candidate, index) => {
+        const item = document.createElement("li");
+        item.className = `candidate${candidate.id === selectedId ? " selected" : ""}`;
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = COLORS[index % COLORS.length];
+        const token = document.createElement("span");
+        token.className = "token";
+        token.textContent = candidate.display;
+        token.title = candidate.display;
+        const probability = document.createElement("span");
+        probability.className = "probability";
+        probability.textContent = `${(candidate.p_displayed * 100).toFixed(1)}%`;
+        item.append(swatch, token, probability);
+        candidateList.append(item);
+      });
+    }
+
+    function updateTruthNote(count) {
+      truthNote.innerHTML = `<strong>Conditional top-${count} wheel.</strong> Tokens outside the displayed ${count} are omitted. The visible percentages are renormalized to total 100%.`;
+    }
+
+    async function readError(response) {
+      try {
+        const payload = await response.json();
+        return payload.error || `Request failed (${response.status}).`;
+      } catch {
+        return `Request failed (${response.status}).`;
+      }
+    }
+
+    async function loadCandidates({rememberStem = false, trimUserInput = false} = {}) {
+      if (busy) return;
+      let text = runStarted ? currentText : textInput.value;
+      if (trimUserInput && !runStarted) {
+        const withoutTrailingSpace = text.replace(/[ \t]+$/u, "");
+        if (withoutTrailingSpace !== text) {
+          text = withoutTrailingSpace;
+          textInput.value = text;
+          showToast("Trailing space removed so the next token can reveal whether it begins with a space.");
+        }
+      }
+      const k = Number(candidateCount.value);
+      if (!text) {
+        setStatus("Enter a sentence stem before generating the wheel.", "error");
+        textInput.focus();
+        return;
+      }
+      if (!Number.isInteger(k) || k < 2 || k > 10) {
+        setStatus("Choose between 2 and 10 displayed candidates.", "error");
+        candidateCount.focus();
+        return;
+      }
+
+      busy = true;
+      loadButton.disabled = true;
+      spinButton.disabled = true;
+      setStatus("Asking the local model for one next-token distribution…");
+      try {
+        const response = await fetch("/api/next", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({text, k}),
+        });
+        if (!response.ok) throw new Error(await readError(response));
+        const payload = await response.json();
+        candidates = payload.candidates;
+        loadedForText = text;
+        if (rememberStem && !runStarted) {
+          initialStem = text;
+          currentText = text;
+          runStarted = true;
+          textInput.readOnly = true;
+        }
+        drawWheel();
+        renderCandidates();
+        updateTruthNote(payload.returned_k);
+        spinButton.disabled = false;
+        setStatus("Guess which token will be selected then spin the wheel.", "success");
+      } catch (error) {
+        candidates = [];
+        loadedForText = "";
+        drawWheel();
+        renderCandidates();
+        setStatus(error.message || "Could not load candidates.", "error");
+      } finally {
+        busy = false;
+        loadButton.disabled = false;
+      }
+    }
+
+    function randomUnit() {
+      const value = new Uint32Array(1);
+      crypto.getRandomValues(value);
+      return value[0] / 4294967296;
+    }
+
+    function wait(milliseconds) {
+      return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+    }
+
+    async function spin() {
+      if (busy || !candidates.length || loadedForText !== currentText) return;
+      busy = true;
+      spinButton.disabled = true;
+      loadButton.disabled = true;
+      await resumeAudio();
+      const sample = randomUnit();
+      let cumulative = 0;
+      let selected = candidates[candidates.length - 1];
+      for (const candidate of candidates) {
+        cumulative += candidate.p_displayed;
+        if (sample < cumulative) {
+          selected = candidate;
+          break;
+        }
+      }
+
+      const target = ((-sample * 360) % 360 + 360) % 360;
+      const current = ((rotation % 360) + 360) % 360;
+      const alignment = (target - current + 360) % 360;
+      rotation += 4 * 360 + alignment;
+      const spinDuration = prefersReducedMotion.matches ? 20 : 3000;
+      setStatus("Spinning within the displayed conditional distribution…");
+      scheduleWheelTicks(spinDuration);
+      wheelGroup.style.transform = `rotate(${rotation}deg)`;
+      await wait(spinDuration);
+      renderCandidates(selected.id);
+      playLandingCue();
+      setStatus(`Selected ${selected.display}.`, "success");
+      await wait(prefersReducedMotion.matches ? 20 : 850);
+
+      if (selected.terminal) {
+        setStatus("The model selected an end token. This run is complete.", "success");
+        busy = false;
+        loadButton.disabled = false;
+        return;
+      }
+
+      const selectedIndex = candidates.findIndex(candidate => candidate.id === selected.id);
+      currentText += selected.raw;
+      selectedTokenHistory.push({
+        raw: selected.raw,
+        display: selected.display,
+        color: COLORS[Math.max(0, selectedIndex) % COLORS.length],
+      });
+      renderTokenHistory();
+      loadedForText = "";
+      busy = false;
+      loadButton.disabled = false;
+      await loadCandidates();
+    }
+
+    function invalidateWheel() {
+      if (busy || runStarted) return;
+      currentText = textInput.value;
+      if (currentText === loadedForText) return;
+      if (selectedTokenHistory.length) {
+        selectedTokenHistory = [];
+        renderTokenHistory();
+      }
+      spinButton.disabled = true;
+      if (candidates.length) setStatus("Text changed. Generate the next-token candidates again.");
+    }
+
+    function resetRun() {
+      if (busy) return;
+      runStarted = false;
+      currentText = initialStem;
+      textInput.value = initialStem;
+      textInput.readOnly = false;
+      candidates = [];
+      selectedTokenHistory = [];
+      loadedForText = "";
+      spinButton.disabled = true;
+      drawWheel();
+      renderCandidates();
+      renderTokenHistory();
+      updateTruthNote(Number(candidateCount.value) || 8);
+      setStatus("Starting text unlocked. Edit it or generate new candidates when you are ready.");
+      textInput.focus();
+    }
+
+    function setConnectionState(state, message) {
+      modelPill.className = `model-pill ${state}`.trim();
+      modelPill.textContent = message;
+    }
+
+    async function checkConnection() {
+      if (!configuredModel) return;
+      try {
+        const response = await fetch("/api/health", {cache: "no-store"});
+        if (!response.ok) throw new Error("Health check failed");
+        const health = await response.json();
+        if (health.ollama_connected && health.model_available) {
+          setConnectionState("connected", `Ollama connected · ${configuredModel}`);
+        } else if (health.ollama_connected) {
+          setConnectionState("missing", `Ollama connected · ${configuredModel} missing`);
+        } else {
+          setConnectionState("disconnected", `Ollama unavailable · ${configuredModel}`);
+        }
+      } catch {
+        setConnectionState("disconnected", `Ollama unavailable · ${configuredModel}`);
+      }
+    }
+
+    async function loadConfig() {
+      try {
+        const response = await fetch("/api/config");
+        if (!response.ok) return;
+        const config = await response.json();
+        configuredModel = config.model;
+        setConnectionState("", `Checking Ollama · ${configuredModel}`);
+        candidateCount.min = config.min_candidates;
+        candidateCount.max = config.max_candidates;
+        candidateCount.value = config.default_candidates;
+        updateTruthNote(config.default_candidates);
+        await checkConnection();
+      } catch {
+        setConnectionState("disconnected", "Local Ollama unavailable");
+      }
+    }
+
+    loadButton.addEventListener("click", () => {
+      loadButton.classList.remove("awaiting-first-use");
+      loadCandidates({
+        rememberStem: !runStarted,
+        trimUserInput: !runStarted,
+      });
+    });
+    spinButton.addEventListener("click", spin);
+    soundToggle.addEventListener("click", toggleSound);
+    resetButton.addEventListener("click", resetRun);
+    textInput.addEventListener("input", invalidateWheel);
+    candidateCount.addEventListener("change", () => {
+      updateTruthNote(Number(candidateCount.value) || 8);
+      if (candidates.length) {
+        spinButton.disabled = true;
+        setStatus("Candidate count changed. Generate the distribution again.");
+      }
+    });
+
+    drawWheel();
+    loadConfig();
+    window.setInterval(checkConnection, 15000);
+  </script>
+</body>
+</html>
