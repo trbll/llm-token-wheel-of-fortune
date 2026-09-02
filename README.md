@@ -160,4 +160,4 @@ The source code is available under the [MIT License](LICENSE). The Ollama model 
 
 ## Course status
 
-This is a classroom-tested teaching demo for ECE:5230 Generative AI Tools, Fall 2026. It was used in class on September 1 and passed another live one-spin smoke test on September 2. It has not yet been published to Git, shared on ICON, or made a student requirement.
+This is a classroom-tested teaching demo for ECE:5230 Generative AI Tools, Fall 2026. It was used in class on September 1 and passed another live one-spin smoke test on September 2. The source is published in the public [`trbll/llm-token-wheel-of-fortune`](https://github.com/trbll/llm-token-wheel-of-fortune) repository. It has not been shared on ICON or made a student requirement.
