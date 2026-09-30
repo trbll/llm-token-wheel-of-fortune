@@ -929,6 +929,8 @@
         });
         if (!response.ok) throw new Error(await readError(response));
         const payload = await response.json();
+        configuredModel = payload.model;
+        setConnectionState("connected", `Ollama connected · ${configuredModel}`);
         candidates = payload.candidates;
         loadedForText = text;
         if (rememberStem && !runStarted) {
@@ -1057,6 +1059,7 @@
         const response = await fetch("/api/health", {cache: "no-store"});
         if (!response.ok) throw new Error("Health check failed");
         const health = await response.json();
+        configuredModel = health.model;
         if (health.ollama_connected && health.model_available) {
           setConnectionState("connected", `Ollama connected · ${configuredModel}`);
         } else if (health.ollama_connected) {
@@ -1071,7 +1074,7 @@
 
     async function loadConfig() {
       try {
-        const response = await fetch("/api/config");
+        const response = await fetch("/api/config", {cache: "no-store"});
         if (!response.ok) return;
         const config = await response.json();
         configuredModel = config.model;

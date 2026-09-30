@@ -21,13 +21,13 @@ _A representative run with eight potential next tokens and color-coded generated
 
 - Python 3.10 or newer
 - [Ollama](https://ollama.com/) running locally
-- The default model:
+- An installed model; the default is:
 
   ```sh
   ollama pull qwen2.5:0.5b-base
   ```
 
-The model download is approximately a few hundred megabytes. If the Ollama desktop app is already running, do not start a second Ollama server.
+The default Qwen model download is approximately a few hundred megabytes. If the Ollama desktop app is already running, do not start a second Ollama server.
 
 ## Run it with uv
 
@@ -75,6 +75,22 @@ Optional command-line settings:
 ```sh
 python3 server.py --port 8765 --model qwen2.5:0.5b-base
 ```
+
+## Switch models
+
+Choose a different installed Ollama model with `--model`. For example, to use Gemma, stop the current wheel server with `Ctrl-C`, then run:
+
+```sh
+python3 server.py --model gemma4:e2b
+```
+
+If Gemma is not already installed, first download it with `ollama pull gemma4:e2b`. No new Python environment or package installation is needed.
+
+Reload [the wheel](http://127.0.0.1:8765). The badge shows the model reported by the server and updates on each successful token request or the periodic health check. Changing the model in Ollama's chat window does not change the wheel's model.
+
+Use the same sentence stems with either model. The wheel requests raw text continuation, and the selected model/backend must support Ollama's `logprobs` and `top_logprobs` output.
+
+To return to the default Qwen model, stop the server and run `python3 server.py` again. To use Gemma on another port, run `python3 server.py --model gemma4:e2b --port 8766` and open [http://127.0.0.1:8766](http://127.0.0.1:8766).
 
 ## Use the wheel
 
@@ -139,8 +155,8 @@ These tests do not start Ollama or load a model.
 ## Troubleshooting
 
 - **Could not reach Ollama:** Start the Ollama desktop app or run `ollama serve`, then retry.
-- **Model not found:** Run `ollama pull qwen2.5:0.5b-base` and retry.
-- **No log probabilities:** Update Ollama to a version whose native `/api/generate` endpoint supports `logprobs` and `top_logprobs`.
+- **Model not found:** Download the model selected by `--model`, for example `ollama pull qwen2.5:0.5b-base` or `ollama pull gemma4:e2b`, then retry.
+- **No log probabilities:** Update Ollama to a version whose native `/api/generate` endpoint supports `logprobs` and `top_logprobs`, and use a model/backend that returns them.
 - **Port already in use:** Choose another local port, such as `python3 server.py --port 8766`.
 
 ## Files
